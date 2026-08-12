@@ -1,0 +1,17 @@
+Tesla, Inc. — Sample Filing Excerpt (for offline testing only)
+
+Business Overview:
+Tesla designs, develops, manufactures, sells, and leases electric vehicles,
+and energy generation and storage systems. Tesla also offers vehicle service
+and sells automotive regulatory credits.
+
+Manufacturing:
+The Company operates vehicle manufacturing facilities, including Gigafactory
+Texas, Gigafactory Shanghai, and Gigafactory Berlin-Brandenburg, in addition
+to its original facility in Fremont, California.
+
+Risk Factors:
+Tesla has experienced rapid growth, which has placed, and may continue to
+place, significant demands on its operational, financial, and management
+infrastructure. Delays in production ramp of new vehicle models could
+adversely affect the Company's business and financial condition.

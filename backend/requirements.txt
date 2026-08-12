@@ -1,0 +1,29 @@
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.6
+pydantic>=2.9.2
+python-dotenv>=1.0.1
+
+langchain>=0.3.7
+langchain-text-splitters>=0.3.0
+langchain-community>=0.3.5
+langchain-core>=0.3.15
+langchain-chroma>=0.1.4
+langchain-huggingface>=0.1.0
+langchain-openai>=0.2.6
+langchain-groq>=0.2.1
+# Uncomment for fully-offline local inference via Ollama (no API key, no internet needed):
+# langchain-ollama>=0.2.0
+
+chromadb>=0.5.18
+sentence-transformers>=3.2.1
+
+pypdf>=5.0.1
+beautifulsoup4>=4.12.3
+lxml>=5.3.0
+
+numpy>=2.0.0
+requests>=2.32.3
+
+# Optional, for offline batch evaluation reports (see evaluation.py)
+# ragas==0.2.6
+# datasets==3.0.1
