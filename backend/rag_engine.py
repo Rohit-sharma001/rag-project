@@ -18,11 +18,14 @@ from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from langchain_community.document_loaders import TextLoader, PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_chroma import Chroma
-from langchain_huggingface import HuggingFaceEmbeddings
-from langchain_openai import OpenAIEmbeddings
 from langchain_core.documents import Document
 from langchain_core.prompts import PromptTemplate
+# NOTE: langchain_chroma, langchain_huggingface, langchain_openai, langchain_groq
+# are intentionally NOT imported here at module level. Each pulls in a heavy
+# dependency (torch, chromadb's native deps, etc.) — importing them eagerly
+# at app boot is what was causing an out-of-memory crash on Render's free
+# 512MB instance before the server even finished starting. They're imported
+# lazily inside the functions that actually use them instead.
 
 load_dotenv()
 
@@ -32,8 +35,9 @@ logger = logging.getLogger("rag_engine")
 # ----------------------------------------------------------------------
 # Config (all overridable via .env)
 # ----------------------------------------------------------------------
-EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER", "huggingface")  # "huggingface" | "openai"
+EMBEDDING_PROVIDER = os.getenv("EMBEDDING_PROVIDER", "huggingface")  # "huggingface" | "huggingface_api" | "openai"
 HF_EMBEDDING_MODEL = os.getenv("HF_EMBEDDING_MODEL", "sentence-transformers/all-MiniLM-L6-v2")
+HF_TOKEN = os.getenv("HF_TOKEN", "")  # required only for "huggingface_api" (free at hf.co/settings/tokens)
 OPENAI_EMBEDDING_MODEL = os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small")
 
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "groq")  # "groq" | "ollama" | "openai"
@@ -108,12 +112,25 @@ class RAGEngine:
     # ------------------------------------------------------------------
     def _load_embeddings(self):
         if EMBEDDING_PROVIDER == "openai":
+            from langchain_openai import OpenAIEmbeddings
             logger.info("Using OpenAI embeddings: %s", OPENAI_EMBEDDING_MODEL)
             return OpenAIEmbeddings(model=OPENAI_EMBEDDING_MODEL)
+        elif EMBEDDING_PROVIDER == "huggingface_api":
+            # Lightweight: calls HuggingFace's free hosted Inference API over
+            # HTTP instead of loading the model (and torch) locally. Ideal
+            # for low-memory deployments like Render's free tier.
+            from langchain_huggingface import HuggingFaceEndpointEmbeddings
+            logger.info("Using HuggingFace Inference API embeddings: %s", HF_EMBEDDING_MODEL)
+            return HuggingFaceEndpointEmbeddings(
+                model=HF_EMBEDDING_MODEL,
+                huggingfacehub_api_token=HF_TOKEN,
+            )
+        from langchain_huggingface import HuggingFaceEmbeddings
         logger.info("Using local HuggingFace embeddings: %s", HF_EMBEDDING_MODEL)
         return HuggingFaceEmbeddings(model_name=HF_EMBEDDING_MODEL)
 
-    def _load_or_init_vectorstore(self) -> Chroma:
+    def _load_or_init_vectorstore(self):
+        from langchain_chroma import Chroma
         os.makedirs(CHROMA_PERSIST_DIR, exist_ok=True)
         return Chroma(
             collection_name="company_filings",
